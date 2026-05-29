@@ -47,12 +47,16 @@ Los campos del grafo se persisten en dos bases de datos (Graph State + KWS Inter
 | Nombre del grafo (`name`) | `graphs.name` | **255 chars** | También en `calls.graph_name` |
 | ID / nombre de nodo | `threads.current_node`, `classifications.current_node` | **255 chars** | Usar nombres descriptivos cortos |
 | Clave de intención (`transitions`, `on_intention`) | `classifications.classification` | **64 chars** | Usar SCREAMING_SNAKE_CASE |
-| `semantic_router_model` | `classifications.router_model` | **512 chars** | Prácticamente sin restricción |
+| `semantic_router_model` | `classifications.router_model` | **64 chars** | Usar nombres cortos tipo `yes_no`, `auth` |
 | `outcome.payment_status` | columna virtual `archived_threads` | **32 chars** | Valores: `payment`, `no_payment`, `unknown` |
 | `outcome.payment_method` | columna virtual `archived_threads` | **32 chars** | Valor del método de pago capturado |
 
 <Warning>
-  Las claves de intención (`AFFIRM`, `PAYMENT_CARD`, etc.) se guardan en `classifications.classification` que es **VARCHAR(64)**. Nombres de intención de más de 64 caracteres se truncan sin error, rompiendo el matching de transiciones.
+  Las claves de intención (`AFFIRM`, `PAYMENT_CARD`, etc.) se guardan en `classifications.classification` que es **VARCHAR(64)**. Nombres de más de 64 caracteres se truncan sin error, rompiendo el matching de transiciones.
+</Warning>
+
+<Warning>
+  El campo `semantic_router_model` también es **VARCHAR(64)**. No uses el nombre largo ni descriptivo del router; usa un identificador corto y simple como `yes_no`, `auth` o `payment_method`. Nombres largos se truncan silenciosamente y el nodo queda sin router funcional.
 </Warning>
 
 ## Intenciones
