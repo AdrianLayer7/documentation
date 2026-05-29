@@ -1,0 +1,48 @@
+---
+title: "Descripción general"
+description: "Graph State Model API: grafos LangGraph, hilos y audio telefónico."
+---
+
+**Graph State** (`kws-ivr-graph-state`) es el motor de **estado conversacional** del IVR: define grafos dirigidos (nodos, transiciones, plantillas, audio) y ejecuta navegación con **LangGraph** persistida en **MySQL**.
+
+## Responsabilidades
+
+- CRUD de grafos y carga desde `graphs/*.json` al arranque
+- Hilos (`threads`) por llamada: `POST /start`, `POST /process`
+- Devolver en cada turno: texto/audio, `semantic_router_model`, `audio_pipeline`, `is_final`
+- Audio telefónico 8 kHz mono en `audio_base64`
+- Outcomes estructurados y archivo de hilos inactivos
+- UI de prueba `/chat` y visualización Mermaid
+
+## No incluye
+
+- Transcripción ni clasificación de audio (lo hace el orquestador + Router Detection)
+- WebSocket con el teléfono (KWS Interface)
+
+## Stack
+
+| Componente | Tecnología |
+|------------|------------|
+| API | FastAPI, Uvicorn |
+| Grafo | LangGraph, LangChain Core |
+| DB | MySQL 8, PyMySQL, aiomysql, DBUtils |
+| Audio | pydub, ffmpeg → WAV 8 kHz |
+| TTS offline | ElevenLabs (`src/generate_tts_audios.py`) |
+| MCP opcional | `mcp/` — proxy REST para agentes |
+
+## Despliegue
+
+K8s: **`autoagent-og-graph-state`**, puerto **8000**. Arranque del contenedor:
+
+1. `migrate_db.py`
+2. `init_default_graph.py` (solo inserta grafos nuevos)
+3. `uvicorn src.app:app`
+
+<CardGroup cols={2}>
+  <Card title="Modelo de grafo" icon="diagram-project" href="/kws-ivr-graph-state/graph-model">
+    Nodos, intenciones y plantillas.
+  </Card>
+  <Card title="Audio pipelines" icon="waveform" href="/kws-ivr-graph-state/audio-pipelines">
+    transcription, native_audio, llm.
+  </Card>
+</CardGroup>

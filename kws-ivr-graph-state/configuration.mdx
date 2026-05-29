@@ -1,0 +1,68 @@
+---
+title: "Configuración"
+description: "Variables de entorno, pools MySQL y purga de hilos."
+---
+
+Referencia: `env.example`, `README.md`, `docker-compose.yml`, `src/app.py`.
+
+## Base de datos
+
+| Variable | Default (Compose) |
+|----------|-------------------|
+| `MYSQL_HOST` | `mysql` |
+| `MYSQL_PORT` | `3306` |
+| `MYSQL_DATABASE` | `ivr_graph_state` |
+| `MYSQL_USER` | `ivr_graph_state_user` |
+| `MYSQL_PASSWORD` | `ivr_graph_state_password` |
+| `MYSQL_ROOT_PASSWORD` | `rootpassword` |
+
+## API
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `API_PORT` | `8000` | Puerto host en Compose |
+| `LOG_LEVEL` | `info` | Logging |
+| `GRAPHS_DIR` | `/app/graphs` | Ruta de JSON al arranque |
+
+## Pools y caché
+
+| Variable | Default |
+|----------|---------|
+| `GRAPH_CACHE_MAX_SIZE` | `200` |
+| `GRAPH_CACHE_FRESHNESS_TTL` | `30` (segundos) |
+| `DB_POOL_MAX_CONNECTIONS` | `30` |
+| `ASYNC_POOL_MAX_SIZE` | `30` |
+
+## Purga de hilos (background)
+
+| Variable | Default |
+|----------|---------|
+| `THREAD_PURGE_INTERVAL_MINUTES` | `10` |
+| `THREAD_PURGE_INACTIVE_AFTER_HOURS` | `1` |
+| `THREAD_ACTIVE_PURGE_MINUTES` | `10` |
+
+## UI y TTS offline
+
+| Variable | Descripción |
+|----------|-------------|
+| `CHAT_ACCESS_TOKEN` | Token para `/chat` (definir en `.env`; no usar el valor por defecto de desarrollo en producción) |
+| `ELEVENLABS_API_KEY` | Solo `generate_tts_audios.py` |
+
+## MCP (`mcp/.env.example`)
+
+| Variable | Descripción |
+|----------|-------------|
+| `IVR_API_BASE_URL` | URL de esta API |
+| `IVR_API_TOKEN` | Bearer opcional hacia Graph State |
+| `MCP_AUTH_TOKEN` | **Requerido** para clientes MCP |
+| `MCP_HOST`, `MCP_PORT` | Bind (default `0.0.0.0:9000`) |
+
+## Kubernetes
+
+`L7/values/templates/default.yaml` define aliases `DATABASE_*`, sidecar MySQL en QA y hostname `autoagent-og-graph-state-${L7_BRANCH}.rdqa.l7labs.art`.
+
+## Enlace desde KWS Interface
+
+```bash
+FLOW_API_BASE_URL=http://autoagent-og-graph-state-${L7_BRANCH}-service:8000
+```

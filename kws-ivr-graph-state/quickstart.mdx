@@ -1,0 +1,83 @@
+---
+title: "Inicio rápido"
+description: "Docker Compose, primera conversación y carga de grafos."
+---
+
+## Docker Compose
+
+```bash
+cd kws-ivr-graph-state
+cp env.example .env
+docker compose up -d
+```
+
+| URL | Uso |
+|-----|-----|
+| http://localhost:8000 | API |
+| http://localhost:8000/docs | OpenAPI |
+| http://localhost:8000/health | Salud + caché |
+
+## Iniciar conversación
+
+```bash
+curl -X POST http://localhost:8000/start \
+  -H "Content-Type: application/json" \
+  -d '{
+    "graph_name": "Debt Collection with Payment Method and Auth - Templates - v0.0.3",
+    "metadata": {
+      "lead_name": "María García",
+      "brand": "Banco Nacional",
+      "debt_amount": 8500.50,
+      "min_debt_amount": 2550.00,
+      "product": "tarjeta de crédito",
+      "payment_due_date": "20 de febrero"
+    }
+  }'
+```
+
+Respuesta típica:
+
+```json
+{
+  "thread_id": "abc-123-def",
+  "current_node": "Confirm Identity",
+  "response": "Hola, hablo de Banco Nacional, ¿eres María García?",
+  "semantic_router_model": "yes_no",
+  "audio_pipeline": "native_audio"
+}
+```
+
+## Procesar intención (orquestador)
+
+Tras clasificar en Router Detection:
+
+```bash
+curl -X POST http://localhost:8000/process \
+  -H "Content-Type: application/json" \
+  -d '{
+    "thread_id": "abc-123-def",
+    "detected_intention": "AFFIRM"
+  }'
+```
+
+## Grafos en disco
+
+Coloca JSON en `graphs/` con nombre `{uuid}.{nombre-legible}.json`. Al reiniciar, `init_default_graph.py` inserta solo grafos que no existen en BD (no sobrescribe).
+
+## Desarrollo local
+
+```bash
+pip install -r requirements.txt
+python src/migrate_db.py
+python src/init_default_graph.py
+uvicorn src.app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+## Subir audio a un nodo
+
+```bash
+curl -X POST "http://localhost:8000/graphs/{graph_id}/node/Confirm%20Identity/audio" \
+  -F "file=@greeting.mp3"
+```
+
+Convierte a WAV 8 kHz mono 16-bit si hace falta.

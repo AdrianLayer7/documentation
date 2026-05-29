@@ -1,0 +1,58 @@
+---
+title: "Descripción general"
+description: "KWS Server: WebSocket en tiempo real, VAD y orquestación de llamadas IVR."
+---
+
+**KWS Interface** (`kws-ivr-interface`) es el servidor **KWS Server**: puente WebSocket entre el cliente telefónico y los servicios backend de IVR.
+
+## Responsabilidades
+
+- Recibir audio **PCM 16 kHz, 16-bit, mono** por WebSocket
+- Detectar voz con **WebRTC VAD** y segmentar utterances
+- Clasificar audio vía **Router Detection**
+- Avanzar el diálogo con **Graph State** (`/start`, `/process`)
+- Reproducir respuestas: `playAudio`, streaming, TTS `say` (Layer7) o TTS servidor (OpenAI/xAI)
+- Persistir llamadas y clasificaciones en **MySQL**
+- Enviar metadata al **webhook** al terminar la llamada
+
+## Stack
+
+| Componente | Tecnología |
+|------------|------------|
+| API | FastAPI, Uvicorn |
+| WebSocket | FastAPI + `websockets` (voice-to-voice) |
+| Config | Pydantic Settings |
+| HTTP | httpx (pool compartido) |
+| VAD | webrtcvad |
+| Base de datos | MySQL 8, aiomysql |
+| Contenedor | Python 3.11, uv en Dockerfile |
+
+## Entry point
+
+Código principal: `main.py`. La lógica vive en `utils/`:
+
+- `utils/conversation/ws_handler.py` — bucle de sesión IVR
+- `utils/api.py` — clientes Flow y Router
+- `utils/voice_to_voice/` — modos Realtime xAI/OpenAI
+
+## Integraciones
+
+| Destino | Uso |
+|---------|-----|
+| Graph State | `FLOW_API_BASE_URL` — flujo conversacional |
+| Router Detection | `SEMANTIC_ROUTER_URL` — transcripción + intención |
+| Webhook | `WEBHOOK_API_URL` — reporte post-llamada |
+| OpenAI / xAI | TTS y Realtime (opcional) |
+
+## Despliegue
+
+Nombre habitual en K8s: **`autoagent-og-interface`**. Puerto **8000**.
+
+<CardGroup cols={2}>
+  <Card title="Inicio rápido" icon="rocket" href="/kws-ivr-interface/quickstart">
+    Docker Compose y variables mínimas.
+  </Card>
+  <Card title="Protocolo WebSocket" icon="plug" href="/kws-ivr-interface/websocket-protocol">
+    Metadata, PCM y mensajes del servidor.
+  </Card>
+</CardGroup>

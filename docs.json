@@ -1,72 +1,130 @@
 {
   "$schema": "https://mintlify.com/docs.json",
+  "name": "Layer7 KWS IVR",
+  "description": "Documentación de la plataforma IVR por voz: interfaz WebSocket, router semántico y motor de grafos conversacionales.",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
   "colors": {
-    "primary": "#16A34A",
+    "primary": "#0D9373",
     "light": "#07C983",
-    "dark": "#15803D"
+    "dark": "#0D9373"
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "pages": [
+    "tabs": [
       {
-        "group": "Getting Started",
-        "pages": [
-          "index",
-          "quickstart"
+        "tab": "Plataforma",
+        "groups": [
+          {
+            "group": "Introducción",
+            "pages": [
+              "introduction",
+              "architecture/overview",
+              "architecture/data-flow"
+            ]
+          },
+          {
+            "group": "Despliegue",
+            "pages": [
+              "architecture/deployment"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "KWS Interface",
+        "groups": [
+          {
+            "group": "General",
+            "pages": [
+              "kws-ivr-interface/overview",
+              "kws-ivr-interface/quickstart"
+            ]
+          },
+          {
+            "group": "Integración",
+            "pages": [
+              "kws-ivr-interface/websocket-protocol",
+              "kws-ivr-interface/api-reference"
+            ]
+          },
+          {
+            "group": "Configuración",
+            "pages": [
+              "kws-ivr-interface/configuration",
+              "kws-ivr-interface/voice-to-voice"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Router Detection",
+        "groups": [
+          {
+            "group": "General",
+            "pages": [
+              "kws-ivr-router-detection/overview",
+              "kws-ivr-router-detection/quickstart"
+            ]
+          },
+          {
+            "group": "API",
+            "pages": [
+              "kws-ivr-router-detection/api-reference",
+              "kws-ivr-router-detection/pipelines"
+            ]
+          },
+          {
+            "group": "Configuración",
+            "pages": [
+              "kws-ivr-router-detection/configuration"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Graph State",
+        "groups": [
+          {
+            "group": "General",
+            "pages": [
+              "kws-ivr-graph-state/overview",
+              "kws-ivr-graph-state/quickstart"
+            ]
+          },
+          {
+            "group": "Grafos",
+            "pages": [
+              "kws-ivr-graph-state/graph-model",
+              "kws-ivr-graph-state/audio-pipelines"
+            ]
+          },
+          {
+            "group": "API",
+            "pages": [
+              "kws-ivr-graph-state/api-reference"
+            ]
+          },
+          {
+            "group": "Configuración",
+            "pages": [
+              "kws-ivr-graph-state/configuration"
+            ]
+          }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    ]
   },
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "GitHub",
+        "href": "https://github.com/layer7mx"
       }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
     ]
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/layer7mx"
     }
   }
 }

@@ -1,0 +1,51 @@
+---
+title: "Introducción"
+description: "Plataforma IVR por voz de Layer7: tres servicios que orquestan llamadas en tiempo real."
+---
+
+La plataforma **KWS IVR** de Layer7 conecta clientes telefónicos (por ejemplo nj-dialer) con flujos conversacionales definidos por grafos. Tres repositorios forman el núcleo del stack:
+
+| Servicio | Repositorio | Puerto (local) | Rol |
+|----------|-------------|----------------|-----|
+| **KWS Interface** | `kws-ivr-interface` | 8000 | WebSocket, VAD, orquestación de llamada, TTS y persistencia |
+| **Router Detection** | `kws-ivr-router-detection` | 8001 | Transcripción y clasificación de intención (MLflow, STT, Gemini) |
+| **Graph State** | `kws-ivr-graph-state` | 8000 | Motor LangGraph: grafos, hilos, nodos y audio telefónico |
+
+En Kubernetes (namespace `autoagent-og`) los despliegues suelen llamarse:
+
+- `autoagent-og-interface`
+- `autoagent-og-router-detection`
+- `autoagent-og-graph-state`
+
+## Flujo de una llamada típica
+
+1. El cliente abre un WebSocket contra **KWS Interface** y envía metadata (grafo, `call_id`, datos del lead).
+2. **KWS Interface** llama `POST /start` en **Graph State** y reproduce el audio del nodo inicial.
+3. El usuario habla; el VAD detecta fin de utterance.
+4. **KWS Interface** envía el audio a **Router Detection** (`POST /audio-semantic-router`) según el `semantic_router_model` del nodo.
+5. Con la intención detectada, **KWS Interface** llama `POST /process` en **Graph State**.
+6. Se repite hasta `is_final` o desconexión; al colgar se consulta el outcome y se envía metadata al webhook.
+
+## Cuándo usar cada pestaña
+
+<CardGroup cols={3}>
+  <Card title="KWS Interface" icon="radio" href="/kws-ivr-interface/overview">
+    Integradores del cliente telefónico, protocolo WebSocket y API REST de llamadas.
+  </Card>
+  <Card title="Router Detection" icon="brain" href="/kws-ivr-router-detection/overview">
+    Equipos de ML, operadores de routers y configuración de STT/clasificación.
+  </Card>
+  <Card title="Graph State" icon="git-branch" href="/kws-ivr-graph-state/overview">
+    Diseño de grafos conversacionales, plantillas, pipelines de audio y API de hilos.
+  </Card>
+</CardGroup>
+
+## Requisitos previos
+
+- Docker y Docker Compose para desarrollo local.
+- APIs externas según el servicio: claves STT/MLflow (router), MySQL (interface y graph state), URLs de Flow y Router (interface).
+- Para producción: valores Helm en `L7/values/` de cada repositorio.
+
+<Note>
+  Esta documentación describe el comportamiento observado en los repositorios del monorepo Layer7. Los hostnames de QA siguen el patrón `autoagent-og-*-${L7_BRANCH}.rdqa.l7labs.art`.
+</Note>

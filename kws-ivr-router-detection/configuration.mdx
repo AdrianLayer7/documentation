@@ -1,0 +1,66 @@
+---
+title: "Configuración"
+description: "Variables de entorno, MLflow y proveedores STT."
+---
+
+Plantilla completa: `.env.example` en `kws-ivr-router-detection`. Lógica: `utils/settings.py`.
+
+## Obligatorias
+
+| Variable | Uso |
+|----------|-----|
+| `API_KEY` | Auth `X-API-Key` |
+| `OPENAI_API_KEY` | Embeddings (+ Whisper opcional) |
+| `MLFLOW_TRACKING_URI` | Registry |
+| `MLFLOW_AUDIO_MODEL_VERSION_<ROUTER>` | Por router en mayúsculas |
+| `MLFLOW_TRANSCRIPTION_MODEL_VERSION_<ROUTER>` | Versiones STT por router |
+
+## STT (al menos un camino operativo)
+
+| Variable | Orden default |
+|----------|---------------|
+| `GROQ_API_KEY` | 1º |
+| `XAI_API_KEY` | (cadena extendida) |
+| `DEEPGRAM_API_KEY` | 2º |
+| `OPENAI_API_KEY` | 3º |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Último fallback |
+
+## Native audio y LLM
+
+| Variable | Descripción |
+|----------|-------------|
+| `GEMINI_API_KEY` | Pipeline `native_audio` |
+| `NATIVE_AUDIO_FORCE_WAV_SAMPLE_RATE_HZ` | Default 8000 en Compose |
+
+## Integración
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `CALLS_API_URL` | `http://localhost:8000` | KWS Interface |
+| `TEXT_ROUTER_ROUTERS` | lista default | Routers a precalentar |
+| `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | |
+
+## Drift y almacenamiento
+
+| Variable | Descripción |
+|----------|-------------|
+| `DO_SPACES_*` | Artefactos de audio y reportes HTML |
+| `EVIDENTLY_API_TOKEN`, `EVIDENTLY_PROJECT_ID` | Cloud opcional |
+| `DRIFT_SLACK_WEBHOOK_URL` | Alertas |
+
+## Servidor
+
+| Variable | Default |
+|----------|---------|
+| `API_PORT` | `8001` (mapeo host) |
+| `WORKERS` | workers Uvicorn |
+| `PROVIDER_CONFIG_PATH` | JSON de orden STT/LLM |
+| `CREATE_GRAPH_MODEL` | `gpt-4o-mini` |
+
+## MySQL (legacy)
+
+Variables `MYSQL_*` y `AUTORUN_DB_INIT` existen por compatibilidad; **la API no escribe MySQL** en el despliegue actual.
+
+<Tip>
+  Mantén `API_KEY` sincronizado con `SEMANTIC_ROUTER_API_KEY` en KWS Interface.
+</Tip>

@@ -1,0 +1,83 @@
+---
+title: "Modelo de grafo"
+description: "Estructura JSON de nodos, transiciones, plantillas y outcomes."
+---
+
+Los grafos viven en MySQL y opcionalmente en `graphs/*.json` para bootstrap. La lógica de navegación está en `GraphStateManager` (`src/app.py`) sobre **LangGraph**.
+
+## Elementos de un grafo
+
+| Concepto | Descripción |
+|----------|-------------|
+| **Nodo** | Estado del diálogo con `response`, audio y reglas de salida |
+| **Transición** | Arista etiquetada con clave de intención (`AFFIRM`, `NEGATION`, …) |
+| **Plantilla** | Texto con placeholders `<lead_name>`, `<debt_amount>` rellenados desde `metadata` |
+| **audio_base64** | WAV 8 kHz mono en base64 para telefonía |
+| **semantic_router_model** | Perfil que debe usar el orquestador en el siguiente turno |
+| **audio_pipeline** | Cómo obtener la intención: ver [Audio pipelines](/kws-ivr-graph-state/audio-pipelines) |
+
+## Convención de archivos
+
+```
+graphs/{graph_id}.{nombre-legible}.json
+```
+
+Ejemplos en el repo: cobranza, encuestas ATT, variantes `consorcio/`, `reference_debt-collection.json`.
+
+## Placeholders
+
+En `POST /start` envías `metadata` con claves que coinciden con placeholders del grafo:
+
+```json
+{
+  "lead_name": "María García",
+  "brand": "Banco Nacional",
+  "debt_amount": 8500.50
+}
+```
+
+El servidor sustituye en `response` antes de devolver audio o texto.
+
+## Límites del modelo de datos
+
+Los campos del grafo se persisten en dos bases de datos (Graph State + KWS Interface). Al diseñar un grafo hay que respetar estos topes de columna para evitar truncamientos silenciosos.
+
+| Campo | Dónde se almacena | Límite | Notas |
+|-------|--------------------|--------|-------|
+| Nombre del grafo (`name`) | `graphs.name` | **255 chars** | También en `calls.graph_name` |
+| ID / nombre de nodo | `threads.current_node`, `classifications.current_node` | **255 chars** | Usar nombres descriptivos cortos |
+| Clave de intención (`transitions`, `on_intention`) | `classifications.classification` | **64 chars** | Usar SCREAMING_SNAKE_CASE |
+| `semantic_router_model` | `classifications.router_model` | **512 chars** | Prácticamente sin restricción |
+| `outcome.payment_status` | columna virtual `archived_threads` | **32 chars** | Valores: `payment`, `no_payment`, `unknown` |
+| `outcome.payment_method` | columna virtual `archived_threads` | **32 chars** | Valor del método de pago capturado |
+
+<Warning>
+  Las claves de intención (`AFFIRM`, `PAYMENT_CARD`, etc.) se guardan en `classifications.classification` que es **VARCHAR(64)**. Nombres de intención de más de 64 caracteres se truncan sin error, rompiendo el matching de transiciones.
+</Warning>
+
+## Intenciones
+
+- Claves de transición deben alinearse con salidas del router (`AFFIRM`, `NEGATION`, `OUT_OF_SCOPE`, etc.)
+- `OUT_OF_SCOPE` lo envía el orquestador; el matcher por keywords del servidor no lo genera
+- Nodo especial `$PREVIOUS_NODE` para volver al nodo anterior
+
+## Outcomes
+
+Hilos archivados exponen columnas virtuales en consultas (`payment_status`, `payment_method`, `hangup`) definidas en `db/init.sql`. Usa:
+
+```http
+GET /threads/{thread_id}/outcome
+```
+
+para el JSON que KWS Interface envía al webhook.
+
+## Herramientas de autoría
+
+- `GET /graphs/{id}/visualize` — HTML con Mermaid
+- `POST /graphs`, `PUT /graphs/{id}` — API de mantenimiento
+- `mcp/GRAPH_CREATION_RULES.md` en el repo — reglas para agentes MCP
+- `src/generate_tts_audios.py` — batch ElevenLabs → base64 en JSON
+
+<Note>
+  `init_default_graph.py` nunca sobrescribe un grafo existente en BD. Para actualizar usa `PUT /graphs/{id}` o borra y vuelve a cargar con cuidado en entornos compartidos.
+</Note>

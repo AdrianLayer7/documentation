@@ -1,0 +1,60 @@
+---
+title: "Referencia API"
+description: "Endpoints HTTP de Semantic Router API."
+---
+
+Autenticación en rutas protegidas: header **`X-API-Key`** = `API_KEY`.
+
+## Públicos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/` | Catálogo de endpoints y routers |
+| GET | `/healthz` | Liveness |
+| GET | `/readyz` | Readiness (modelos cargados) |
+| GET | `/models/loaded` | Modelos MLflow en memoria |
+| GET | `/metrics` | Prometheus |
+
+## Clasificación
+
+### `POST /audio-semantic-router`
+
+Cuerpo `multipart/form-data`:
+
+| Campo | Descripción |
+|-------|-------------|
+| `audio_file` | WAV/PCM del utterance |
+| `router_model` | Perfil (`yes_no`, `auth`, `payment_method`, …) |
+| `call_id` | Trazabilidad |
+| `phone`, `current_node`, `turn_number` | Contexto opcional |
+| `audio_pipeline` | `transcription` (default), `native_audio`, `llm` |
+| `language` | Ej. `es-MX` |
+
+### `POST /text-semantic-router`
+
+Clasificación solo texto (mismos routers MLflow).
+
+## Operaciones
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/dashboard` | UI de monitoreo |
+| GET | `/api/call/{call_id}` | Detalle vía Calls API |
+| GET | `/api/download`, `/api/data/complete` | Export |
+| POST | `/drift/generate` | Reportes Evidently |
+| GET/POST | `/create-graph` | Generador de grafos con LLM |
+| GET/POST | `/config/*` | Orden de proveedores STT, circuit breaker, TTS |
+
+## Cliente Calls API
+
+`utils/api/client.py` consulta KWS Interface:
+
+- `GET {CALLS_API_URL}/api/calls`
+- `GET {CALLS_API_URL}/api/calls/{call_id}`
+- `GET {CALLS_API_URL}/api/data/complete`
+
+`utils/api/tts_config_client.py` — `GET/PATCH /api/tts/config`.
+
+## OpenAPI
+
+Disponible en `/docs` con el servicio en ejecución.

@@ -1,0 +1,67 @@
+---
+title: "Referencia API REST"
+description: "Endpoints HTTP de KWS Interface además del WebSocket."
+---
+
+Base URL: `http://host:8000` (producción según ingress del cluster).
+
+## Salud
+
+### `GET /`
+
+```json
+{"status": "ok", "service": "KWS WebSocket Server"}
+```
+
+## Llamadas y datos
+
+### `GET /api/calls`
+
+Lista llamadas con filtros y estadísticas agregadas (VAD, certeza, duración).
+
+### `GET /api/calls/{call_id}`
+
+Detalle de una llamada con historial de clasificaciones.
+
+### `GET /api/data/complete`
+
+Exportación completa (llamadas + clasificaciones) para análisis o dashboard del router.
+
+## TTS en runtime
+
+Requiere header `X-API-Key` igual a `SEMANTIC_ROUTER_API_KEY`.
+
+### `GET /api/tts/config`
+
+Devuelve configuración TTS activa.
+
+### `PATCH /api/tts/config`
+
+Actualiza proveedor/voz sin reiniciar el proceso (consumido también desde el dashboard del router).
+
+## WebSocket
+
+| Ruta | Descripción |
+|------|-------------|
+| `WS /` | IVR clásico o dispatch por `mode` en metadata |
+| `WS /realtime` | Voice-to-voice xAI (default en esta ruta) |
+| `WS /realtime/xai` | xAI Realtime |
+| `WS /realtime/openai` | OpenAI Realtime |
+
+## Llamadas salientes (cliente HTTP interno)
+
+| Destino | Métodos |
+|---------|---------|
+| Graph State | `POST /start`, `POST /process`, `GET /graphs/{id}`, `GET /threads/{id}/outcome` |
+| Router Detection | `POST` multipart a `SEMANTIC_ROUTER_URL` |
+| Webhook | `POST /webhooks/save-call-metadata` |
+
+Implementación: `utils/api.py`, `utils/webhook.py`, `utils/flow_thread_outcome.py`.
+
+## OpenAPI
+
+FastAPI genera esquema en `/docs` cuando el servicio corre localmente.
+
+<Info>
+  Router Detection lee estos endpoints de llamadas vía `CALLS_API_URL` para su dashboard; no duplica persistencia de llamadas.
+</Info>

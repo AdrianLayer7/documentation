@@ -1,0 +1,44 @@
+---
+title: "Voice-to-voice"
+description: "Modo Realtime con xAI u OpenAI sin ciclo router/process por turno."
+---
+
+Cuando la metadata del WebSocket incluye `mode`, **KWS Interface** enruta la sesión a un bridge Realtime en lugar del bucle VAD + Router + Graph process.
+
+## Modos
+
+| `mode` en metadata | Endpoint | Upstream |
+|--------------------|----------|----------|
+| `xai_realtime` | `/` (dispatch) o `/realtime/xai` | `wss://api.x.ai/v1/realtime` |
+| `openai_realtime` | `/` o `/realtime/openai` | OpenAI Realtime API |
+| (omitido) | `/` | IVR clásico |
+
+`utils/voice_to_voice/dispatcher.py` elige el handler según metadata en el primer mensaje.
+
+## Prompt desde grafo
+
+`utils/voice_to_voice/graph_prompt.py` puede cargar instrucciones con:
+
+```http
+GET {FLOW_API_BASE_URL}/graphs/{graph_id}
+```
+
+Útil para alinear el agente de voz con el guion del grafo sin ejecutar transiciones LangGraph en cada turno.
+
+## Audio
+
+- Entrada/salida en tiempo real por el WebSocket del cliente
+- No usa `POST /audio-semantic-router` por utterance
+- Requiere `XAI_API_KEY` o `OPENAI_API_KEY` según proveedor
+
+## Cuándo usarlo
+
+- Prototipos conversacionales abiertos
+- Demos sin grafo rígido nodo a nodo
+- Casos donde la latencia de un solo modelo de voz supera el pipeline STT+MLflow
+
+<Warning>
+  Los outcomes estructurados de cobranza (`GET /threads/.../outcome`) no aplican igual que en IVR clásico. Valida requisitos de negocio antes de sustituir el flujo Graph State en producción.
+</Warning>
+
+Ver también variables en [Configuración](/kws-ivr-interface/configuration#voice-to-voice-env-adicionales).

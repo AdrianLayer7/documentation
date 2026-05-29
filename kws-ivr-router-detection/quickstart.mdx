@@ -1,0 +1,61 @@
+---
+title: "Inicio rápido"
+description: "Levantar Semantic Router API con Docker Compose."
+---
+
+## Prerrequisitos
+
+- `API_KEY` para rutas protegidas
+- `OPENAI_API_KEY` (embeddings y Whisper opcional)
+- `MLFLOW_TRACKING_URI` y versiones `MLFLOW_*_MODEL_VERSION_*` por router
+- Al menos una clave STT: `GROQ_API_KEY`, `DEEPGRAM_API_KEY`, etc.
+
+## Pasos
+
+<Steps>
+  <Step title="Configurar entorno">
+    ```bash
+    cd kws-ivr-router-detection
+    cp .env.example .env
+    ```
+  </Step>
+  <Step title="Arrancar">
+    ```bash
+    docker compose up --build -d
+    docker compose logs -f
+    ```
+  </Step>
+  <Step title="Comprobar API">
+    ```bash
+    curl http://localhost:8001/
+    curl http://localhost:8001/healthz
+    ```
+  </Step>
+  <Step title="Probar clasificación">
+    ```bash
+    curl -X POST http://localhost:8001/audio-semantic-router \
+      -H "X-API-Key: $API_KEY" \
+      -F "audio_file=@sample.wav" \
+      -F "router_model=yes_no" \
+      -F "call_id=test-001" \
+      -F "language=es-MX"
+    ```
+  </Step>
+</Steps>
+
+## Dashboard
+
+Abre `http://localhost:8001/dashboard`. Los datos de llamadas provienen de `CALLS_API_URL` (KWS Interface en `http://localhost:8000`).
+
+## Volumen de drift
+
+Compose monta `./drift_workspace/current` para persistir `drift_observations.jsonl`.
+
+## Local sin Docker
+
+```bash
+pip install -r requirements.txt
+python app.py
+```
+
+`app.py` importa `api.app` y ejecuta Uvicorn en `0.0.0.0:8001`.

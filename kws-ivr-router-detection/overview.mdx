@@ -1,0 +1,43 @@
+---
+title: "Descripción general"
+description: "Semantic Router API: transcripción, clasificación MLflow y routers IVR."
+---
+
+**Router Detection** (`kws-ivr-router-detection`) expone la **Semantic Router API**: convierte audio (o texto) del usuario en una **intención discreta** para que Graph State avance el grafo.
+
+## Responsabilidades
+
+- Cadena STT con fallback: Groq → xAI → Deepgram → OpenAI → Google
+- Pipeline **native_audio**: embedding Gemini + clasificador MLflow sin STT
+- Clasificación por embeddings OpenAI + modelos sklearn en MLflow
+- Fast path sí/no en routers `yes_no` y `auth`
+- Dashboard y export que **leen** datos del Calls API (KWS Interface)
+- Drift con Evidently y JSONL opcional en Spaces
+
+## Stack
+
+| Capa | Tecnología |
+|------|------------|
+| API | FastAPI, Uvicorn |
+| ML | scikit-learn vía MLflow, OpenAI embeddings |
+| STT | Groq, Deepgram, OpenAI Whisper, Google Speech, xAI |
+| Native audio | Google Gemini + MLflow |
+| Observabilidad | Prometheus `/metrics`, `/healthz`, `/readyz` |
+| Puerto | **8001** |
+
+## Consumidor principal
+
+**KWS Interface** envía multipart a `POST /audio-semantic-router` con header `X-API-Key`.
+
+## Despliegue
+
+Imagen K8s: `autoagent-og-router-detection`. No escribe MySQL en operación normal (legacy deprecado).
+
+<CardGroup cols={2}>
+  <Card title="Inicio rápido" icon="rocket" href="/kws-ivr-router-detection/quickstart">
+    Docker y verificación de salud.
+  </Card>
+  <Card title="Pipelines" icon="workflow" href="/kws-ivr-router-detection/pipelines">
+    Transcription vs native_audio vs LLM.
+  </Card>
+</CardGroup>

@@ -1,0 +1,72 @@
+---
+title: "Referencia API"
+description: "Endpoints REST de Graph State Model API."
+---
+
+Implementación monolítica en `src/app.py`. OpenAPI interactivo en `/docs`.
+
+## Grafos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/graphs` | Crear grafo |
+| GET | `/graphs` | Listar |
+| GET | `/graphs/{id}` | Obtener configuración |
+| GET | `/graphs/{id}/template-keys` | Claves de plantilla |
+| PUT | `/graphs/{id}` | Actualizar (recarga caché) |
+| DELETE | `/graphs/{id}` | Borrar grafo e hilos (CASCADE) |
+| POST | `/graphs/{id}/reload` | Recargar desde BD |
+| POST | `/graphs/{id}/node/{node_id}/audio` | Subir MP3/WAV |
+| GET | `/graphs/{id}/visualize` | Vista Mermaid HTML |
+
+## Conversación (orquestador)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/start` | Iniciar con `graph_name` o `graph_id` + `metadata` |
+| POST | `/process` | Avanzar con `detected_intention` externa |
+
+## Hilos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/threads` | Crear hilo (API alternativa) |
+| POST | `/threads/{id}/process` | Avanzar con `user_input` (transcription) |
+| GET | `/threads/{id}` | Estado + historial (`?history_limit=N`) |
+| GET | `/threads/{id}/outcome` | Outcome estructurado |
+| POST | `/threads/{id}/hangup` | Colgar / archivar |
+| GET | `/threads/stats` | Estadísticas |
+| GET | `/threads/archived` | Búsqueda paginada |
+| POST | `/threads/purge` | Limpieza manual |
+
+## Sistema
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/health` | DB + estado de caché LRU |
+| GET | `/chat?token=...` | UI de prueba (`CHAT_ACCESS_TOKEN`) |
+
+## Ejemplo `/start`
+
+```bash
+curl -X POST http://localhost:8000/start \
+  -H "Content-Type: application/json" \
+  -d '{"graph_id": "00000000-0000-4000-8000-000000000001", "metadata": {"lead_name": "Ana"}}'
+```
+
+## Ejemplo `/process`
+
+```bash
+curl -X POST http://localhost:8000/process \
+  -H "Content-Type: application/json" \
+  -d '{"thread_id": "...", "detected_intention": "NEGATION"}'
+```
+
+## Caché
+
+- `GRAPH_CACHE_MAX_SIZE` — grafos en LRU (default 200)
+- `GRAPH_CACHE_FRESHNESS_TTL` — segundos antes de validar versión en BD
+
+## MCP (subproyecto)
+
+Herramientas en `mcp/src/tools/graphs.py` espejan estos endpoints vía `IVRClient`. Autenticación MCP: Bearer `MCP_AUTH_TOKEN`.

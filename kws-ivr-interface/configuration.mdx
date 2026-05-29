@@ -1,0 +1,84 @@
+---
+title: "Configuración"
+description: "Variables de entorno y ajustes de VAD, TTS y base de datos."
+---
+
+Fuente canónica: `utils/config/settings.py` y `.env.example` en `kws-ivr-interface`.
+
+## Variables requeridas
+
+| Variable | Descripción |
+|----------|-------------|
+| `FLOW_API_BASE_URL` | Base URL de Graph State |
+| `SEMANTIC_ROUTER_URL` | URL completa del endpoint de audio router |
+| `SEMANTIC_ROUTER_API_KEY` | `X-API-Key` para router y protección `/api/tts/config` |
+
+## Graph y flujo
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `FLOW_GRAPH_NAME` | `""` | Grafo por defecto si metadata no trae `graph_id`/`graph_name` |
+| `MAX_CONVERSATION_TURNS` | `20` | Máximo de turnos antes de colgar |
+| `MAX_EMPTY_ATTEMPTS` | `3` | Reintentos tras timeout de VAD |
+| `MAX_WAIT_SECONDS` | `5.0`–`12.0` | Timeout esperando voz (revisar `.env` del despliegue) |
+
+## VAD y audio
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `SAMPLE_RATE` | `16000` | Hz para VAD y envío al router |
+| `VAD_AGGRESSIVENESS` | `3` | 0–3 (3 = más filtrado) |
+| `VAD_FRAME_DURATION_MS` | `20` | 10, 20 o 30 |
+| `VAD_PADDING_DURATION_MS` | `200`–`300` | Ventana de padding |
+| `BARGE_IN_PROTECT_PERCENT` | `90` | Protección de playback ante barge-in |
+| `SOXR_QUALITY` | `LQ` | Calidad de resample 24→8 kHz para TTS |
+| `AUDIOS_DIR` | `audios_received/...` | Grabaciones de sesión |
+
+## TTS
+
+| Variable | Default | Descripción |
+|----------|---------|-------------|
+| `TTS_PROVIDER` | `layer7` | `layer7` (say en cliente) u `openai` (servidor) |
+| `TTS_STREAM_MODE` | `true` | `playAudioStream` vs WAV único |
+| `TTS_VOICE` | `ES-NN-MX-FEMALE-01` | Voz Layer7 por defecto |
+| `OPENAI_API_KEY`, `OPENAI_TTS_VOICE` | — | TTS OpenAI |
+| `XAI_API_KEY`, `XAI_TTS_VOICE` | — | TTS xAI (prioridad si `TTS_PROVIDER=openai`) |
+
+## Servidor y HTTP
+
+| Variable | Default |
+|----------|---------|
+| `WEB_WORKERS` | `2` |
+| `REQUEST_TIMEOUT` | `30.0` |
+| `LOG_LEVEL` | `INFO` |
+| `HTTP_MAX_CONNECTIONS` | `100` |
+| `HTTP_MAX_KEEPALIVE_CONNECTIONS` | `50` |
+
+## MySQL
+
+| Variable | Default (local) |
+|----------|-----------------|
+| `MYSQL_HOST` | `localhost` (`mysql` en Compose) |
+| `MYSQL_PORT` | `3306` |
+| `MYSQL_DATABASE` | `ivr_router` |
+| `MYSQL_USER` / `MYSQL_PASSWORD` | `ivr_user` / `ivr_password` |
+| `DB_POOL_MIN_SIZE` / `DB_POOL_MAX_SIZE` | `2` / `50` |
+
+## Webhook
+
+| Variable | Default |
+|----------|---------|
+| `WEBHOOK_API_URL` | URL del receptor de metadata (autoagent / nj-dialer) |
+
+## Voice-to-voice (env adicionales)
+
+Leídos en `utils/voice_to_voice/config.py`:
+
+| Variable | Default |
+|----------|---------|
+| `VOICE_TO_VOICE_XAI_MODEL` | `grok-voice-fast-1.0` |
+| `VOICE_TO_VOICE_XAI_VOICE` | `ara` |
+| `VOICE_TO_VOICE_OPENAI_MODEL` | `gpt-realtime-2` |
+| `VOICE_TO_VOICE_OPENAI_VOICE` | `alloy` |
+
+Selección por metadata `mode`: `xai_realtime`, `openai_realtime`; sin `mode` → IVR clásico.

@@ -1,0 +1,81 @@
+---
+title: "Despliegue"
+description: "Docker local, imágenes ICR y servicios Kubernetes del stack autoagent-og."
+---
+
+## Desarrollo local (tres servicios)
+
+Levanta cada repositorio en su puerto. **Graph State** y **Interface** usan el puerto 8000 en documentación; en la práctica ejecuta Graph State primero y Interface en otro host/puerto si hay conflicto, o usa solo Docker Compose por proyecto.
+
+<AccordionGroup>
+  <Accordion title="Graph State">
+    ```bash
+    cd kws-ivr-graph-state
+    cp env.example .env
+    docker compose up -d
+    curl http://localhost:8000/health
+    ```
+  </Accordion>
+  <Accordion title="Router Detection">
+    ```bash
+    cd kws-ivr-router-detection
+    cp .env.example .env
+    docker compose up --build -d
+    curl http://localhost:8001/healthz
+    ```
+  </Accordion>
+  <Accordion title="KWS Interface">
+    ```bash
+    cd kws-ivr-interface
+    cp .env.example .env
+    # FLOW_API_BASE_URL=http://localhost:8000
+    # SEMANTIC_ROUTER_URL=http://localhost:8001/audio-semantic-router
+    docker compose up -d
+    curl http://localhost:8000/
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Variables de enlace entre servicios
+
+| Variable (Interface) | Valor local típico |
+|---------------------|-------------------|
+| `FLOW_API_BASE_URL` | `http://localhost:8000` (Graph State) |
+| `SEMANTIC_ROUTER_URL` | `http://localhost:8001/audio-semantic-router` |
+| `SEMANTIC_ROUTER_API_KEY` | Mismo valor que `API_KEY` del router |
+
+| Variable (Router) | Valor local típico |
+|------------------|-------------------|
+| `CALLS_API_URL` | `http://localhost:8000` (Interface REST) |
+
+## Kubernetes (Layer7)
+
+Plantillas en `L7/values/templates/default.yaml` de cada repo:
+
+| Servicio K8s | Imagen (ejemplo) | Puerto |
+|--------------|------------------|--------|
+| `autoagent-og-interface` | `icr.io/layer7mx/ccc/autoagent-og-interface` | 8000 |
+| `autoagent-og-router-detection` | `icr.io/layer7mx/ccc/autoagent-og-router-detection` | 8001 |
+| `autoagent-og-graph-state` | `icr.io/layer7mx/ccc/autoagent-og-graph-state` | 8000 |
+
+URLs in-cluster (QA):
+
+```text
+http://autoagent-og-graph-state-${L7_BRANCH}-service:8000
+http://autoagent-og-router-detection-${L7_BRANCH}-service:8001/audio-semantic-router
+http://autoagent-og-interface-${L7_BRANCH}-service:8000
+```
+
+Ingress de ejemplo: `*.rdqa.l7labs.art`.
+
+## CI/CD
+
+Los tres proyectos usan **Bitbucket Pipelines** con build de imagen Docker, push a IBM Container Registry y despliegue vía scripts en `L7/pipeline-helpers/`.
+
+## MCP opcional (Graph State)
+
+El subproyecto `kws-ivr-graph-state/mcp/` expone herramientas MCP que proxean la API REST (puerto 9000 por defecto). Requiere `MCP_AUTH_TOKEN` y `IVR_API_BASE_URL`. No forma parte del path de llamada en producción.
+
+<Warning>
+  No expongas claves `API_KEY`, `SEMANTIC_ROUTER_API_KEY` ni credenciales MLflow en el repositorio de documentación. Usa secretos del cluster o `.env` local ignorado por git.
+</Warning>

@@ -1,0 +1,74 @@
+---
+title: "Inicio rápido"
+description: "Ejecutar KWS Interface con Docker Compose y verificar conectividad."
+---
+
+## Prerrequisitos
+
+- Docker y Docker Compose
+- **Graph State** y **Router Detection** accesibles (local o remoto)
+- Archivo `.env` a partir de `.env.example`
+
+## Pasos
+
+<Steps>
+  <Step title="Clonar y configurar">
+    ```bash
+    cd kws-ivr-interface
+    cp .env.example .env
+    ```
+
+    Variables mínimas:
+
+    ```bash
+    FLOW_API_BASE_URL=http://localhost:8000
+    SEMANTIC_ROUTER_URL=http://localhost:8001/audio-semantic-router
+    SEMANTIC_ROUTER_API_KEY=tu-api-key
+    ```
+  </Step>
+  <Step title="Levantar servicios">
+    ```bash
+    docker compose up -d
+    docker compose logs -f kws-server
+    ```
+
+    MySQL inicializa tablas desde `db/01_database.sql` y `db/02_tables.sql` en el primer arranque.
+  </Step>
+  <Step title="Verificar salud">
+    ```bash
+    curl http://localhost:8000/
+    ```
+
+    Respuesta esperada:
+
+    ```json
+    {"status": "ok", "service": "KWS WebSocket Server"}
+    ```
+  </Step>
+  <Step title="Probar WebSocket">
+    Conecta a `ws://localhost:8000/`, envía metadata en base64 como primer mensaje de texto, luego chunks PCM binarios. Ver [Protocolo WebSocket](/kws-ivr-interface/websocket-protocol).
+  </Step>
+</Steps>
+
+## Desarrollo sin Docker
+
+```bash
+pip install -r requirements.txt
+export FLOW_API_BASE_URL=...
+export SEMANTIC_ROUTER_URL=...
+export SEMANTIC_ROUTER_API_KEY=...
+python main.py
+```
+
+Uvicorn escucha en `0.0.0.0:8000` con `WEB_WORKERS` workers.
+
+## Imagen standalone
+
+```bash
+docker build -t kws-server .
+docker run -d -p 8000:8000 --env-file .env -v $(pwd)/logs:/app/logs kws-server
+```
+
+<Tip>
+  En Compose, `MYSQL_HOST=mysql`. Ajusta `DB_POOL_MAX_SIZE` y `max_connections` de MySQL según `WEB_WORKERS` y réplicas en K8s.
+</Tip>
